@@ -3,20 +3,18 @@ const cors = require('cors');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-const API_KEY = process.env.ANTHROPIC_API_KEY;
+const GEMINI_KEY = process.env.GEMINI_API_KEY;
 
 app.use(cors());
 app.use(express.json({ limit: '20mb' }));
 
-// Health check
 app.get('/', (req, res) => {
-  res.json({ status: 'ok', service: 'Bingo Validator API' });
+  res.json({ status: 'ok', service: 'Bingo Validator - Gemini Edition' });
 });
 
-// Endpoint principal - analiza imagen
 app.post('/analizar', async (req, res) => {
-  if (!API_KEY) {
-    return res.status(500).json({ error: 'API key no configurada en el servidor' });
+  if (!GEMINI_KEY) {
+    return res.status(500).json({ error: 'API key de Gemini no configurada en el servidor' });
   }
 
   const { imagen, tipo } = req.body;
@@ -44,40 +42,46 @@ Responde ÚNICAMENTE con este JSON válido (sin texto extra, sin backticks, sin 
 }`;
 
   try {
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': API_KEY,
-        'anthropic-version': '2023-06-01'
-      },
-      body: JSON.stringify({
-        model: 'claude-haiku-4-5-20251001',
-        max_tokens: 1000,
-        messages: [{
-          role: 'user',
-          content: [
-            { type: 'image', source: { type: 'base64', media_type: tipo || 'image/jpeg', data: imagen } },
-            { type: 'text', text: prompt }
-          ]
-        }]
-      })
-    });
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_KEY}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{
+            parts: [
+              {
+                inline_data: {
+                  mime_type: tipo || 'image/jpeg',
+                  data: imagen
+                }
+              },
+              { text: prompt }
+            ]
+          }],
+          generationConfig: {
+            temperature: 0.1,
+            maxOutputTokens: 1000
+          }
+        })
+      }
+    );
 
     if (!response.ok) {
       const err = await response.json().catch(() => ({}));
-      return res.status(response.status).json({ error: err?.error?.message || `Error ${response.status}` });
+      const msg = err?.error?.message || `Error ${response.status}`;
+      return res.status(response.status).json({ error: msg });
     }
 
     const data = await response.json();
-    const raw = data.content.map(c => c.text || '').join('').trim();
+    const raw = data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
     const clean = raw.replace(/```json|```/g, '').trim();
 
     try {
       const parsed = JSON.parse(clean);
       res.json({ ok: true, data: parsed });
     } catch (e) {
-      res.status(422).json({ error: 'No se pudo leer la imagen. Usa una foto más clara.' });
+      res.status(422).json({ error: 'No se pudo leer la imagen. Usa una foto más clara y bien iluminada.' });
     }
 
   } catch (err) {
@@ -86,5 +90,5 @@ Responde ÚNICAMENTE con este JSON válido (sin texto extra, sin backticks, sin 
 });
 
 app.listen(PORT, () => {
-  console.log(`Servidor bingo corriendo en puerto ${PORT}`);
+  console.log(`Servidor bingo (Gemini) corriendo en puerto ${PORT}`);
 });
