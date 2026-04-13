@@ -13,7 +13,7 @@ app.use(express.json({ limit: '25mb' }));
 app.get('/', (req, res) => {
   res.json({
     status: 'ok',
-    service: 'Bingo Validator - OpenAI GPT-4 Vision',
+    service: 'Bingo Validator - OpenAI GPT-4O',
     version: '3.0',
     estructura: '27 cantados + Tabla1 5x5 + Tabla2 5x5'
   });
@@ -40,6 +40,7 @@ ESTRUCTURA EXACTA DEL TIQUETE QUE DEBES LEER:
    - FILA 3: exactamente 7 numeros
    - FILA 4: exactamente 7 numeros
    - TOTAL: 27 numeros (todos entre 01 y 75)
+   - Cada celda tiene el numero arriba grande y texto en letra pequena abajo
 
 2. TABLA 1 (cuadricula azul, derecha arriba, etiqueta "TABLA 1"):
    - 5 columnas con letras B-I-N-G-O
@@ -91,7 +92,7 @@ Responde UNICAMENTE con JSON valido, sin texto adicional, sin backticks, sin mar
         'Authorization': `Bearer ${OPENAI_KEY}`
       },
       body: JSON.stringify({
-        model: "gpt-4-vision-preview",
+        model: "gpt-4o",
         messages: [{
           role: "user",
           content: [
@@ -176,13 +177,5 @@ Responde UNICAMENTE con JSON valido, sin texto adicional, sin backticks, sin mar
       }
     });
 
-  } catch (err) {
-    console.error('Server error:', err.message);
-    res.status(500).json({ error: 'Error interno del servidor: ' + err.message });
-  }
-});
-
-app.listen(PORT, () => {
-  console.log(`Servidor Bingo v3.0 corriendo en puerto ${PORT}`);
-  console.log(`OPENAI_API_KEY configurada: ${OPENAI_KEY ? 'SI' : 'NO'}`);
-});
+  } catch (err
+
