@@ -83,7 +83,7 @@ Responde UNICAMENTE con JSON valido, sin texto adicional, sin backticks, sin mar
 }`;
 
   try {
-    const url = `https://generativelanguage.googleapis.com/v1/models/gemini-pro-vision:generateContent?key=${GEMINI_KEY}`;
+    const url = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-pro:generateContent?key=${GEMINI_KEY}`;
 
     const response = await fetch(url, {
       method: 'POST',
