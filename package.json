@@ -1,25 +1,24 @@
 {
   "name": "bingo-validator-server",
   "version": "1.0.0",
-  "description": "Servidor proxy para validador de tiquetes Bingo SuperGIROS con Gemini AI",
+  "description": "Bingo ticket validator using OpenAI GPT-4 Vision",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "dev": "node --watch server.js"
+    "dev": "nodemon server.js"
   },
+  "keywords": ["bingo", "validator", "openai", "gpt-4-vision"],
+  "author": "",
+  "license": "MIT",
   "dependencies": {
     "express": "^4.18.2",
-    "cors": "^2.8.5"
+    "cors": "^2.8.5",
+    "openai": "^4.28.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
   },
   "engines": {
-    "node": ">=18.0.0"
-  },
-  "keywords": [
-    "bingo",
-    "supergiros",
-    "gemini-ai",
-    "ocr",
-    "colombia"
-  ],
-  "author": "RiGuti OFC"
+    "node": "18.x"
+  }
 }
