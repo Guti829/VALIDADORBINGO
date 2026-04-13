@@ -3,9 +3,9 @@ const cors = require('cors');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-const GEMINI_KEY = process.env.GEMINI_API_KEY;
+const OPENAI_KEY = process.env.OPENAI_API_KEY; // Cambiar aquí
 
-// CORS abierto para que cualquier celular pueda conectarse
+// CORS abierto
 app.use(cors({ origin: '*' }));
 app.use(express.json({ limit: '25mb' }));
 
@@ -13,15 +13,15 @@ app.use(express.json({ limit: '25mb' }));
 app.get('/', (req, res) => {
   res.json({
     status: 'ok',
-    service: 'Bingo Validator - Gemini',
+    service: 'Bingo Validator - OpenAI',
     version: '3.0',
     estructura: '27 cantados + Tabla1 5x5 + Tabla2 5x5'
   });
 });
 
 app.post('/analizar', async (req, res) => {
-  if (!GEMINI_KEY) {
-    return res.status(500).json({ error: 'GEMINI_API_KEY no configurada en el servidor' });
+  if (!OPENAI_KEY) {
+    return res.status(500).json({ error: 'OPENAI_API_KEY no configurada en el servidor' });
   }
 
   const { imagen, tipo } = req.body;
@@ -83,39 +83,50 @@ Responde UNICAMENTE con JSON valido, sin texto adicional, sin backticks, sin mar
 }`;
 
   try {
-    const url = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-pro:generateContent?key=${GEMINI_KEY}`;
+    const url = `https://api.openai.com/v1/chat/completions`; // OpenAI endpoint
 
     const response = await fetch(url, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${OPENAI_KEY}` // Agregar autenticación
+      },
       body: JSON.stringify({
-        contents: [{
-          parts: [
-            { inline_data: { mime_type: tipo || 'image/jpeg', data: imagen } },
-            { text: prompt }
+        model: "gpt-4-vision", // Modelo con visión
+        messages: [{
+          role: "user",
+          content: [
+            {
+              type: "image_url",
+              image_url: {
+                url: `data:${tipo || 'image/jpeg'};base64,${imagen}`
+              }
+            },
+            {
+              type: "text",
+              text: prompt
+            }
           ]
         }],
-        generationConfig: {
-          temperature: 0.05,
-          maxOutputTokens: 1200
-        }
+        max_tokens: 1200,
+        temperature: 0.05
       })
     });
 
     const result = await response.json();
 
     if (!response.ok) {
-      const msg = result?.error?.message || `Error Gemini: ${response.status}`;
-      console.error('Gemini error:', msg);
+      const msg = result?.error?.message || `Error OpenAI: ${response.status}`;
+      console.error('OpenAI error:', msg);
       return res.status(response.status).json({ error: msg });
     }
 
-    const raw = result?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    const raw = result?.choices?.[0]?.message?.content || '';
     if (!raw) {
-      return res.status(422).json({ error: 'Gemini no devolvio contenido. Intenta con foto mas clara.' });
+      return res.status(422).json({ error: 'OpenAI no devolvio contenido. Intenta con foto mas clara.' });
     }
 
-    // Limpiar backticks y markdown que Gemini a veces incluye
+    // Limpiar backticks y markdown
     const clean = raw
       .replace(/```json\s*/gi, '')
       .replace(/```\s*/g, '')
@@ -137,7 +148,7 @@ Responde UNICAMENTE con JSON valido, sin texto adicional, sin backticks, sin mar
       return res.status(422).json({ error: 'Estructura incompleta en la respuesta. Intenta con foto mas clara y bien iluminada.' });
     }
 
-    // Normalizar cantados: convertir objeto de filas a array plano de 27
+    // Normalizar cantados
     let cantadosFlat = [];
     if (Array.isArray(parsed.cantados)) {
       cantadosFlat = parsed.cantados.map(Number);
@@ -149,12 +160,11 @@ Responde UNICAMENTE con JSON valido, sin texto adicional, sin backticks, sin mar
       cantadosFlat = [...f1, ...f2, ...f3, ...f4];
     }
 
-    // Devolver datos normalizados
     res.json({
       ok: true,
       data: {
-        cantados: cantadosFlat,          // array de 27 números
-        cantados_filas: {                // también por filas para la UI
+        cantados: cantadosFlat,
+        cantados_filas: {
           fila1: cantadosFlat.slice(0, 6),
           fila2: cantadosFlat.slice(6, 13),
           fila3: cantadosFlat.slice(13, 20),
@@ -175,5 +185,5 @@ Responde UNICAMENTE con JSON valido, sin texto adicional, sin backticks, sin mar
 
 app.listen(PORT, () => {
   console.log(`Servidor Bingo v3.0 corriendo en puerto ${PORT}`);
-  console.log(`GEMINI_API_KEY configurada: ${GEMINI_KEY ? 'SI' : 'NO'}`);
+  console.log(`OPENAI_API_KEY configurada: ${OPENAI_KEY ? 'SI' : 'NO'}`);
 });
