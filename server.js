@@ -1,4 +1,3 @@
-
 const express = require('express');
 const cors = require('cors');
 
@@ -84,7 +83,7 @@ Responde UNICAMENTE con JSON valido, sin texto adicional, sin backticks, sin mar
 }`;
 
   try {
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_KEY}`;
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-8b:generateContent?key=${GEMINI_KEY}`;
 
     const response = await fetch(url, {
       method: 'POST',
@@ -178,4 +177,3 @@ app.listen(PORT, () => {
   console.log(`Servidor Bingo v3.0 corriendo en puerto ${PORT}`);
   console.log(`GEMINI_API_KEY configurada: ${GEMINI_KEY ? 'SI' : 'NO'}`);
 });
-
