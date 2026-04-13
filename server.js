@@ -177,5 +177,13 @@ Responde UNICAMENTE con JSON valido, sin texto adicional, sin backticks, sin mar
       }
     });
 
-  } catch (err
-
+  } catch (err) {
+    console.error('Server error:', err.message);
+    res.status(500).json({ error: 'Error interno del servidor: ' + err.message });
+  }
+});
+
+app.listen(PORT, () => {
+  console.log(`Servidor Bingo v3.0 corriendo en puerto ${PORT}`);
+  console.log(`OPENAI_API_KEY configurada: ${OPENAI_KEY ? 'SI' : 'NO'}`);
+});
